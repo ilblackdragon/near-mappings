@@ -1,6 +1,6 @@
-use near_sdk::{AccountId, BorshStorageKey, env, PanicOnDefault, near_bindgen};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LookupMap;
+use near_sdk::{env, near_bindgen, AccountId, BorshStorageKey, PanicOnDefault};
 
 #[derive(BorshSerialize, BorshStorageKey)]
 enum StorageKeys {
@@ -28,7 +28,11 @@ impl Contract {
     pub fn set(&mut self, account_id: Option<AccountId>, label: String, content: Option<String>) {
         let id = if let Some(account_id) = account_id {
             if env::predecessor_account_id() != account_id {
-                assert_eq!(self.delegates.get(&account_id).expect("ERR_NOT_DELEGATE"), env::predecessor_account_id(), "ERR_NOT_DELEGATE");
+                assert_eq!(
+                    self.delegates.get(&account_id).expect("ERR_NOT_DELEGATE"),
+                    env::predecessor_account_id(),
+                    "ERR_NOT_DELEGATE"
+                );
             }
             account_id
         } else {
@@ -42,12 +46,15 @@ impl Contract {
     }
 
     pub fn get(&self, account_id: AccountId, label: String) -> String {
-        self.mappings.get(&(account_id, label)).expect("ERR_NO_VALUE")
+        self.mappings
+            .get(&(account_id, label))
+            .expect("ERR_NO_VALUE")
     }
 
     pub fn delegate(&mut self, account_id: Option<AccountId>) {
         if let Some(account_id) = account_id {
-            self.delegates.insert(&env::predecessor_account_id(), &account_id);
+            self.delegates
+                .insert(&env::predecessor_account_id(), &account_id);
         } else {
             self.delegates.remove(&env::predecessor_account_id());
         }
@@ -57,11 +64,13 @@ impl Contract {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use near_sdk::{testing_env, VMContext};
     use near_sdk::test_utils::VMContextBuilder;
+    use near_sdk::{testing_env, VMContext};
 
     fn get_context(account_id: &AccountId) -> VMContext {
-        VMContextBuilder::new().predecessor_account_id(account_id.clone()).build()
+        VMContextBuilder::new()
+            .predecessor_account_id(account_id.clone())
+            .build()
     }
 
     #[test]
@@ -72,11 +81,19 @@ mod tests {
         let mut c = Contract::new();
         c.set(None, "label".to_string(), Some("test".to_string()));
         assert_eq!(c.get(account1.clone(), "label".to_string()), "test");
-        c.set(Some(account1.clone()), "label".to_string(), Some("test2".to_string()));
+        c.set(
+            Some(account1.clone()),
+            "label".to_string(),
+            Some("test2".to_string()),
+        );
         assert_eq!(c.get(account1.clone(), "label".to_string()), "test2");
         c.delegate(Some(account2.clone()));
         testing_env!(get_context(&account2));
-        c.set(Some(account1.clone()), "label".to_string(), Some("test3".to_string()));
+        c.set(
+            Some(account1.clone()),
+            "label".to_string(),
+            Some("test3".to_string()),
+        );
         assert_eq!(c.get(account1.clone(), "label".to_string()), "test3");
     }
 }
