@@ -1,0 +1,19 @@
+[package]
+name = "near-mappings"
+version = "0.1.0"
+authors = ["Illia Polosukhin <ilblackdragon@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+near-sdk = "4.1.1"
+
+[profile.release]
+codegen-units = 1
+opt-level = "s"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true
